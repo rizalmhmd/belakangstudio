@@ -1,5 +1,5 @@
 {
-    "require": {
-        "mpdf/mpdf": "*"
-    }
+    "name": "belakangstudio/pos",
+    "description": "Belakang Studio POS & Self-Order",
+    "require": {}
 }
