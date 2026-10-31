@@ -1,7 +1,7 @@
 <?php
 // order_success.php
-session_start();
 require_once 'db.php'; // rupiah() sudah ada di sini
+if (session_status() === PHP_SESSION_NONE) session_start();
 
 $id = intval($_GET['id'] ?? 0);
 if (!$id) {

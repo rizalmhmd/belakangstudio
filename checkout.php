@@ -1,6 +1,6 @@
 <?php
-session_start();
 require_once 'db.php';
+if (session_status() === PHP_SESSION_NONE) session_start();
 
 if (!isset($_SESSION['customer']) || empty($_SESSION['cart'])) {
   header("Location: menu.php");
@@ -16,8 +16,8 @@ foreach ($cart as $it) {
 }
 
 $uploadDir = __DIR__ . "/uploads/";
-if (!is_dir($uploadDir)) {
-  mkdir($uploadDir, 0777, true);
+if (!is_dir($uploadDir) && !getenv('VERCEL')) {
+  @mkdir($uploadDir, 0777, true);
 }
 
 $error = "";
@@ -123,15 +123,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = "Format file harus JPG atau PNG.";
       } elseif ($file['size'] > 2 * 1024 * 1024) {
         $error = "Ukuran file maksimal 2MB.";
-      } elseif (!is_dir($uploadDir) && !mkdir($uploadDir, 0775, true) && !is_dir($uploadDir)) {
-        $error = "Folder upload tidak dapat dibuat.";
       } else {
-        $fname = "qris_" . bin2hex(random_bytes(8)) . "." . $ext;
-        $target = $uploadDir . $fname;
-        if (move_uploaded_file($file['tmp_name'], $target)) {
-          $buktiPath = "uploads/" . $fname;
-        } else {
-          $error = "Gagal upload bukti pembayaran.";
+        $savedToDisk = false;
+        if (!getenv('VERCEL') && (is_dir($uploadDir) || @mkdir($uploadDir, 0775, true))) {
+          $fname = "qris_" . bin2hex(random_bytes(8)) . "." . $ext;
+          $target = $uploadDir . $fname;
+          if (@move_uploaded_file($file['tmp_name'], $target)) {
+            $buktiPath = "uploads/" . $fname;
+            $savedToDisk = true;
+          }
+        }
+        if (!$savedToDisk) {
+          $rawBytes = @file_get_contents($file['tmp_name']);
+          if ($rawBytes !== false) {
+            @$mysqli->query("ALTER TABLE orders MODIFY COLUMN bukti_qris LONGTEXT NULL");
+            $buktiPath = "data:" . $mime . ";base64," . base64_encode($rawBytes);
+          } else {
+            $error = "Gagal upload bukti pembayaran.";
+          }
         }
       }
     }

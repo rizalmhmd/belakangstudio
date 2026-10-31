@@ -1,6 +1,6 @@
 <?php
-session_start();
 require_once 'db.php';
+if (session_status() === PHP_SESSION_NONE) session_start();
 
 if (!isset($_SESSION['customer'])) {
     header("Location: index.php");
@@ -189,8 +189,8 @@ $shouldResumeCheckout = isset($_GET['resume']) && $_GET['resume'] === '1' && !em
                         ?>
                         <div class="menu-card" data-name="<?= strtolower(htmlspecialchars($m['name'])) ?>">
                             
-                            <?php if (!empty($m['image']) && $m['image'] !== 'uploads/default.jpg' && file_exists($m['image'])): ?>
-                                <!-- Memanggil foto dari folder uploads -->
+                            <?php if (!empty($m['image']) && $m['image'] !== 'uploads/default.jpg' && (strpos($m['image'], 'data:image/') === 0 || preg_match('#^https?://#i', $m['image']) || file_exists(__DIR__ . '/' . ltrim($m['image'], '/')))): ?>
+                                <!-- Memanggil foto dari folder uploads atau data URI -->
                                 <img src="<?= htmlspecialchars($m['image']) ?>" alt="<?= htmlspecialchars($m['name']) ?>">
                             <?php else: ?>
                                 <div class="no-image">No Photo</div>

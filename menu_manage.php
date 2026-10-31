@@ -1,6 +1,6 @@
 <?php
-session_start();
 require_once 'db.php';
+if (session_status() === PHP_SESSION_NONE) session_start();
 
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
     header("Location: admin_login.php");
@@ -92,17 +92,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($stock < 0) $stock = 0;
 
         $image = '';
-        if (!empty($_FILES['image']['name'])) {
+        if (!empty($_FILES['image']['name']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
             $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
             $allowed = ['jpg', 'jpeg', 'png', 'webp'];
             if (in_array($ext, $allowed, true)) {
-                if (!is_dir($uploadDir) && !mkdir($uploadDir, 0777, true) && !is_dir($uploadDir)) {
-                    throw new RuntimeException('Gagal membuat direktori upload menu.');
+                $savedToDisk = false;
+                if (!getenv('VERCEL') && (is_dir($uploadDir) || @mkdir($uploadDir, 0777, true))) {
+                    $filename = uniqid('menu_') . '.' . $ext;
+                    $target = $uploadDir . $filename;
+                    if (@move_uploaded_file($_FILES['image']['tmp_name'], $target)) {
+                        $image = 'uploads/' . $filename;
+                        $savedToDisk = true;
+                    }
                 }
-                $filename = uniqid('menu_') . '.' . $ext;
-                $target = $uploadDir . $filename;
-                if (move_uploaded_file($_FILES['image']['tmp_name'], $target)) {
-                    $image = 'uploads/' . $filename;
+                if (!$savedToDisk) {
+                    $mime = (new finfo(FILEINFO_MIME_TYPE))->file($_FILES['image']['tmp_name']) ?: 'image/jpeg';
+                    $rawBytes = @file_get_contents($_FILES['image']['tmp_name']);
+                    if ($rawBytes !== false) {
+                        @$mysqli->query("ALTER TABLE menus MODIFY COLUMN image LONGTEXT NULL");
+                        $image = 'data:' . $mime . ';base64,' . base64_encode($rawBytes);
+                    }
                 }
             }
         }
