@@ -192,13 +192,10 @@ button:hover {
 <body>
 
 <div class="card">
-  <div class="icon-box">
-    <!-- Simbol Kunci atau User -->
-    👤
-  </div>
+  <img src="images/BsBiru2-cropped.png" alt="Logo Belakang Studio" style="width: 170px; max-width: 75%; height: auto; margin: 0 auto 14px; display: block;">
   
   <h2>Belakang Studio</h2>
-  <p>Kasir Belakang Studio</p>
+  <p>Portal Kasir Belakang Studio</p>
 
   <?php if (!empty($error)): ?>
     <div class="error"><?= htmlspecialchars($error) ?></div>

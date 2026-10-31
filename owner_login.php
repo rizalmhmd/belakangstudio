@@ -51,6 +51,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             justify-content: center;
             background: linear-gradient(135deg, #eef4ff 0%, #dfeaff 100%);
             padding: 20px;
+            position: relative;
+            overflow-x: hidden;
         }
 
         body::before {
@@ -162,7 +164,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
     <div class="card">
-        <img src="images/BsBiru2.png" class="logo" alt="Belakang Studio Logo">
+        <img src="images/BsBiru2-cropped.png" class="logo" alt="Belakang Studio Logo">
 
         <h2>Belakang Studio</h2>
         <p class="subtitle">Silakan masuk sebagai owner untuk mengelola data restoran.</p>
@@ -174,15 +176,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <form method="post">
             <div class="input-group">
                 <label for="username">Nama Owner</label>
-                <input id="username" type="text" name="username" value="owner" required>
+                <input id="username" type="text" name="username" value="owner" placeholder="Masukkan username owner" required>
             </div>
 
             <div class="input-group">
                 <label for="password">Password</label>
-                <input id="password" type="password" name="password" value="12345" required>
+                <input id="password" type="password" name="password" placeholder="Masukkan password" required>
             </div>
 
-            <button type="submit">Masuk</button>
+            <button type="submit">Masuk ke Dashboard</button>
         </form>
     </div>
 </body>

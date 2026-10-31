@@ -85,10 +85,6 @@ $topMenus = $topMenuResult->fetch_all(MYSQLI_ASSOC);
 $topMenuMaxQuantity = $topMenus ? max(array_map(static function ($menu) {
     return (int)$menu['total_qty'];
 }, $topMenus)) : 0;
-
-function ownerRupiah($amount) {
-    return 'Rp ' . number_format((float)$amount, 0, ',', '.');
-}
 ?>
 <!doctype html>
 <html lang="id">
@@ -465,15 +461,15 @@ function ownerRupiah($amount) {
         <section class="cards">
             <div class="metric">
                 <div class="label">Penjualan Hari Ini</div>
-                <div class="value"><?= htmlspecialchars(ownerRupiah($salesTotals['today']), ENT_QUOTES, 'UTF-8') ?></div>
+                <div class="value"><?= htmlspecialchars(rupiah($salesTotals['today']), ENT_QUOTES, 'UTF-8') ?></div>
             </div>
             <div class="metric">
                 <div class="label">Penjualan Bulan Ini</div>
-                <div class="value"><?= htmlspecialchars(ownerRupiah($salesTotals['month']), ENT_QUOTES, 'UTF-8') ?></div>
+                <div class="value"><?= htmlspecialchars(rupiah($salesTotals['month']), ENT_QUOTES, 'UTF-8') ?></div>
             </div>
             <div class="metric">
                 <div class="label">Penjualan Tahun Ini</div>
-                <div class="value"><?= htmlspecialchars(ownerRupiah($salesTotals['year']), ENT_QUOTES, 'UTF-8') ?></div>
+                <div class="value"><?= htmlspecialchars(rupiah($salesTotals['year']), ENT_QUOTES, 'UTF-8') ?></div>
             </div>
         </section>
 

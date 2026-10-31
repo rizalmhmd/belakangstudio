@@ -1,8 +1,5 @@
 <?php
 // index.php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
 require_once 'db.php';
 if (session_status() === PHP_SESSION_NONE) session_start();
 
@@ -54,6 +51,8 @@ body {
   /* Gradasi biru cerah yang bersih */
   background: linear-gradient(135deg, #f0f4ff 0%, #d9e4ff 100%);
   padding: 20px;
+  position: relative;
+  overflow-x: hidden;
 }
 
 /* Dekorasi Lingkaran Halus di Background */

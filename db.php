@@ -7,6 +7,9 @@ $DB_PASS = getenv('DB_PASS') !== false ? getenv('DB_PASS') : ($_ENV['DB_PASS'] ?
 $DB_NAME = getenv('DB_NAME') ?: ($_ENV['DB_NAME'] ?? 'test');
 $DB_SSL  = getenv('DB_SSL') ?: ($_ENV['DB_SSL'] ?? 'true');
 
+// Setel zona waktu ke WIB (Asia/Jakarta)
+date_default_timezone_set('Asia/Jakarta');
+
 $mysqli = mysqli_init();
 
 // Gunakan SSL otomatis jika terhubung ke TiDB Cloud atau jika DB_SSL=true
@@ -24,6 +27,7 @@ if (!$connected || $mysqli->connect_errno) {
 }
 
 $mysqli->set_charset("utf8mb4");
+@$mysqli->query("SET time_zone = '+07:00'");
 
 // Database Session Handler untuk lingkungan Serverless (Vercel)
 if (!class_exists('DbSessionHandler')) {
@@ -106,6 +110,78 @@ if (getenv('VERCEL') || getenv('DB_SESSION') === 'true' || $useSsl) {
         image LONGTEXT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+    // Auto-seed daftar menu awal jika tabel menus masih kosong
+    $menuCheck = @$mysqli->query("SELECT COUNT(*) AS cnt FROM menus");
+    if ($menuCheck && (int)($menuCheck->fetch_assoc()['cnt'] ?? 0) === 0) {
+        $defaultMenus = [
+            ['Food & Snack', 'Burger Melt Master', 'Burger daging sapi juicy dengan lelehan keju spesial', 25000, 32000, 20, 'uploads/Burger_Melt_Master.jpg'],
+            ['Food & Snack', 'Burger Spice Blaster', 'Burger sapi dengan saus pedas gurih khas Studio', 25000, 32000, 20, 'uploads/Burger_Spice_Blaster.jpg'],
+            ['Food & Snack', 'Cheese Cake', 'Potongan kue keju lembut dan creamy', 22000, 0, 15, 'uploads/Cheese_cake.jpg'],
+            ['Food & Snack', 'Croissant Choco', 'Pastry renyah berlapis dengan isian cokelat lumer', 18000, 0, 15, 'uploads/Croissant_Choco.jpg'],
+            ['Food & Snack', 'Croissant Plain', 'Croissant mentega klasik yang renyah dan harum', 15000, 0, 15, 'uploads/Croissant_Plain.jpg'],
+            ['Food & Snack', 'Kentang Goreng', 'French fries renyah dengan taburan bumbu gurih', 15000, 0, 25, 'uploads/Kentang_Goreng.jpg'],
+            ['Food & Snack', 'Keripik', 'Camilan keripik renyah teman ngopi', 12000, 0, 25, 'uploads/Keripik.jpg'],
+            ['Food & Snack', 'Mac & Cheese', 'Makaroni panggang dengan saus keju melimpah', 22000, 0, 15, 'uploads/Mac_Cheese.jpg'],
+            ['Food & Snack', 'Mac & Cheese Chicken Nashville', 'Mac & cheese creamy dengan topping ayam pedas Nashville', 28000, 0, 15, 'uploads/Mac_Cheese_Chicken_Nashville.jpg'],
+            ['Food & Snack', 'Mix Platter', 'Paket camilan lengkap sosis, kentang, dan nugget', 25000, 0, 20, 'uploads/Mix_Platter.jpg'],
+            ['Food & Snack', 'Ricebowl Nashville', 'Nasi hangat dengan ayam crispy bumbu Nashville pedas gurih', 25000, 30000, 20, 'uploads/Ricebowl_Nashville.jpg'],
+            ['Food & Snack', 'Spaghetti Carbonara', 'Spaghetti creamy saus carbonara dengan smoked beef', 25000, 0, 15, 'uploads/Spaghetti_Carbonara.jpg'],
+            ['Coffee (1)', 'Americano', 'Espresso dengan air mineral hangat atau dingin yang segar', 15000, 17000, 30, 'uploads/Americano.jpg'],
+            ['Coffee (1)', 'Americano Breeze', 'Kesegaran Americano dingin dengan sentuhan manis segar', 0, 20000, 25, 'uploads/Americano_Breeze.jpg'],
+            ['Coffee (1)', 'Americano On The Rock', 'Double shot espresso disajikan langsung di atas es batu', 0, 18000, 25, 'uploads/Americano_on_the_rock.jpg'],
+            ['Coffee (1)', 'Cafe Latte', 'Perpaduan espresso lembut dengan steamed milk', 18000, 20000, 30, 'uploads/Cafe_Latte.jpg'],
+            ['Coffee (1)', 'Dirty Latte', 'Susu dingin segar dengan tuangan espresso hangat di atasnya', 0, 22000, 25, 'uploads/Dirty_Latte.jpg'],
+            ['Coffee (1)', 'Espresso', 'Ekstraksi kopi murni dengan crema tebal', 12000, 0, 30, 'uploads/Espresso.jpg'],
+            ['Coffee (1)', 'Magic', 'Double ristretto dengan rasio susu microfoam yang seimbang', 20000, 0, 25, 'uploads/Magic.jpg'],
+            ['Coffee (1)', 'Studio Latte', 'Signature kopi susu racikan khas Belakang Studio', 20000, 22000, 30, 'uploads/Studio_Latte.jpg'],
+            ['Coffee (2)', 'Avocado Coffee', 'Paduan alpukat lembut dengan siraman shot espresso', 0, 24000, 20, 'uploads/Avocado_Coffee.jpg'],
+            ['Coffee (2)', 'Es Kopi Susu Klasik', 'Es kopi susu gula aren klasik favorit', 0, 18000, 35, 'uploads/Es_Kopi_Susu_Klasik.jpg'],
+            ['Coffee (2)', 'Es Kopi Susu Butterscotch', 'Es kopi susu lembut dengan aroma butterscotch manis gurih', 0, 22000, 30, 'uploads/Es_Kopi_Susu_Butterscotch.jpg'],
+            ['Coffee (2)', 'Es Kopi Susu Regal', 'Es kopi susu creamy dengan topping biskuit Marie Regal', 0, 23000, 25, 'uploads/Es_Kopi_Susu_Regal.jpg'],
+            ['Coffee (2)', 'Es Kopi Susu Salted Caramel', 'Es kopi susu dengan perpaduan saus karamel gurih', 0, 22000, 30, 'uploads/Es_Kopi_Susu_Salted_Caramel.jpg'],
+            ['Coffee (2)', 'Es Kopi Susu Vanilla', 'Es kopi susu dengan sentuhan sirup vanilla harum', 0, 20000, 30, 'uploads/Es_Kopi_Susu_Vanilla.jpg'],
+            ['Matcha', 'Matcha Latte Regular', 'Minuman teh hijau Jepang lembut dengan susu segar', 20000, 22000, 25, 'uploads/Matcha_Latte_Regular.jpg'],
+            ['Matcha', 'Matcha Latte Strong', 'Matcha latte dengan takaran bubuk matcha lebih pekat', 23000, 25000, 25, 'uploads/Matcha_Latte_Strong.jpg'],
+            ['Matcha', 'Matcha Peppermint Latte', 'Perpaduan matcha creamy dengan sensasi dingin peppermint', 22000, 24000, 20, 'uploads/Matcha_Peppermint_Latte.jpg'],
+            ['Matcha', 'Matcha Regal Latte', 'Matcha latte dingin dengan taburan biskuit Regal', 0, 24000, 20, 'uploads/Matcha_Regal_Latte.jpg'],
+            ['Matcha', 'Matcha Salted Caramel', 'Matcha latte dengan saus salted caramel yang legit', 0, 24000, 20, 'uploads/Matcha_Salted_Caramel.jpg'],
+            ['Matcha', 'Matchapresso', 'Perpaduan unik antara teh hijau matcha, susu, dan shot espresso', 22000, 24000, 20, 'uploads/Matchapresso.jpg'],
+            ['Matcha', 'Strawberry Matcha Latte', 'Gradasi selai stroberi manis segar, susu, dan matcha pilihan', 0, 24000, 25, 'uploads/Strawberry_Matcha_Latte.jpg'],
+            ['Matcha', 'Unsweet Matcha Latte', 'Matcha latte murni tanpa tambahan gula', 20000, 22000, 20, 'uploads/Unsweet_Matcha_Latte.jpg'],
+            ['Chocolatte', 'Chocolatte', 'Minuman cokelat klasik yang kaya rasa dan creamy', 18000, 20000, 30, 'uploads/Chocolatte.jpg'],
+            ['Chocolatte', 'Chocolatte Butterscotch', 'Cokelat susu lembut dengan sirup butterscotch', 20000, 22000, 25, 'uploads/Chocolatte_Butterscotch.jpg'],
+            ['Chocolatte', 'Chocolatte Peppermint', 'Cokelat creamy dengan kesegaran rasa mint', 20000, 22000, 25, 'uploads/Chocolatte_Peppermint.jpg'],
+            ['Chocolatte', 'Chocolatte Regal', 'Es cokelat susu kental dengan topping biskuit Regal', 0, 23000, 25, 'uploads/Chocolatte_Regal.jpg'],
+            ['Chocolatte', 'Chocolatte Strawberry', 'Paduan cokelat pekat dengan manis asam stroberi', 0, 23000, 25, 'uploads/Chocolatte_Strawberry.jpg'],
+            ['Chocolatte', 'Choco Presso', 'Minuman cokelat berpadu dengan shot espresso kopi', 20000, 22000, 25, 'uploads/Choco_presso.jpg'],
+            ['Chocolatte', 'Choco Salted Caramel', 'Minuman cokelat lembut dengan saus salted caramel', 20000, 22000, 25, 'uploads/Choco_Salted_Caramel.jpg'],
+            ['Chocolatte', 'Choco Vanilla Latte', 'Minuman cokelat dengan aroma vanilla yang lembut', 20000, 22000, 25, 'uploads/Choco_Vanilla_Latte.jpg'],
+            ['Other Milk Base', 'Avocado Latte', 'Minuman susu rasa alpukat yang lembut dan menyegarkan', 0, 20000, 25, 'uploads/Avocado_Latte.jpg'],
+            ['Other Milk Base', 'Avocado Regal Latte', 'Susu alpukat dingin dengan topping biskuit Marie Regal', 0, 23000, 25, 'uploads/Avocado_Regal_Latte.jpg'],
+            ['Other Milk Base', 'Korean Strawberry', 'Susu segar dingin dengan potongan buah dan selai stroberi ala Korea', 0, 22000, 25, 'uploads/Korean_Strawberry.jpg'],
+            ['Other Milk Base', 'Red Velvet Latte', 'Minuman red velvet lembut dan manis dengan susu segar', 18000, 20000, 25, 'uploads/Red_Velvet_Latte.jpg'],
+            ['Other Milk Base', 'Red Velvet Regal Latte', 'Es red velvet latte dengan topping biskuit Regal', 0, 23000, 25, 'uploads/Red_Velvet_Regal_Latte.jpg'],
+            ['Other Milk Base', 'Redpresso', 'Perpaduan red velvet latte dengan tambahan shot espresso', 20000, 22000, 20, 'uploads/Redpresso.jpg'],
+            ['Other Milk Base', 'Taro Latte', 'Minuman ubi ungu taro yang manis dan creamy', 18000, 20000, 25, 'uploads/Taro_Latte.jpg'],
+            ['Other Milk Base', 'Vanilla Regal Latte', 'Susu vanilla creamy dengan taburan biskuit Marie Regal', 0, 22000, 25, 'uploads/Vanilla_Regal_Latte.jpg'],
+            ['Others', 'Black Tea', 'Teh hitam pilihan disajikan hangat atau dingin', 10000, 12000, 35, 'uploads/Black_Tea.jpg'],
+            ['Others', 'Lemon Tea', 'Teh segar dengan perasan jeruk lemon asli', 13000, 15000, 35, 'uploads/Lemon_Tea.jpg'],
+            ['Others', 'Lychee Tea', 'Es teh manis segar dengan buah leci', 0, 18000, 30, 'uploads/Lychee_Tea.jpg'],
+            ['Others', 'Mineral Water', 'Air mineral kemasan dingin atau suhu ruang', 8000, 0, 40, 'uploads/Mineral_Water.jpg'],
+            ['Others', 'Extra Shot', 'Tambahan 1 shot espresso kopi', 5000, 0, 50, 'uploads/Extra_Shot.jpg'],
+            ['Others', 'Extra Green Shot', 'Tambahan shot matcha pekat', 6000, 0, 50, 'uploads/Extra_Green_Shot.jpg'],
+            ['Others', 'Extra Egg & Cheese', 'Tambahan topping telur dan keju', 8000, 0, 40, 'uploads/Extra_egg_Cheese.jpg'],
+        ];
+        $seedStmt = @$mysqli->prepare("INSERT INTO menus (category, name, description, price_hot, price_ice, stock, image, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())");
+        if ($seedStmt) {
+            foreach ($defaultMenus as $dm) {
+                $seedStmt->bind_param("sssiiis", $dm[0], $dm[1], $dm[2], $dm[3], $dm[4], $dm[5], $dm[6]);
+                @$seedStmt->execute();
+            }
+            $seedStmt->close();
+        }
+    }
 
     @$mysqli->query("CREATE TABLE IF NOT EXISTS orders (
         id INT AUTO_INCREMENT PRIMARY KEY,

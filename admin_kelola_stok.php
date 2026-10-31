@@ -66,9 +66,6 @@ if ($result) {
 }
 
 $currentPage = basename($_SERVER['PHP_SELF']);
-function activeClass($file, $currentPage) {
-    return $file === $currentPage ? "background:#1E4DB7;border-left:4px solid #fff;" : "";
-}
 ?>
 <!doctype html>
 <html lang="id">

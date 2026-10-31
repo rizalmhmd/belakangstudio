@@ -147,8 +147,6 @@ if (($action === 'edit') && $id) {
     $stmt->execute();
     $editData = $stmt->get_result()->fetch_assoc();
 }
-
-function rupiah($n) { return "Rp" . number_format($n, 0, ',', '.'); }
 ?>
 <!doctype html>
 <html lang="id">

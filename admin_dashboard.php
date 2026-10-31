@@ -8,12 +8,6 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
     exit;
 }
 
-if (!function_exists('rupiah')) {
-    function rupiah($n) {
-        return "Rp " . number_format($n, 0, ',', '.');
-    }
-}
-
 function getOrderStatusData(mysqli $mysqli): ?array {
     $counts = ['baru' => 0, 'diproses' => 0, 'selesai' => 0];
     $statuses = [];
@@ -105,8 +99,10 @@ $totals['year'] = (float)$res->fetch_assoc()['s'];
 
 // Kategori Terlaris
 $sql = "SELECT COALESCE(m.category,'Lainnya') AS category, SUM(oi.qty) AS total_qty
-        FROM order_items oi
-        LEFT JOIN menus m ON oi.menu_id=m.id
+        FROM orders o
+        INNER JOIN order_items oi ON oi.order_id = o.id
+        LEFT JOIN menus m ON oi.menu_id = m.id
+        WHERE o.status = 'selesai'
         GROUP BY category
         ORDER BY total_qty DESC";
 $res = $mysqli->query($sql);
@@ -119,7 +115,7 @@ while ($res && $r=$res->fetch_assoc()) {
 // Grafik Bulanan
 $sql = "SELECT MONTH(created_at) AS m, COALESCE(SUM(total),0) AS sum_total
         FROM orders
-        WHERE YEAR(created_at)=$year
+        WHERE YEAR(created_at)=$year AND status='selesai'
         GROUP BY MONTH(created_at)";
 $res = $mysqli->query($sql);
 $monthly = array_fill(1,12,0);
@@ -131,7 +127,7 @@ $month_values = [];
 for ($i=1;$i<=12;$i++) $month_values[]=$monthly[$i];
 
 // Top 5 Menu
-$sql="SELECT oi.menu_name, SUM(oi.qty) AS total_qty FROM order_items oi GROUP BY oi.menu_name ORDER BY total_qty DESC LIMIT 5";
+$sql="SELECT oi.menu_name, SUM(oi.qty) AS total_qty FROM orders o INNER JOIN order_items oi ON oi.order_id = o.id WHERE o.status='selesai' GROUP BY oi.menu_name ORDER BY total_qty DESC LIMIT 5";
 $res=$mysqli->query($sql);
 $top_menus = $res ? $res->fetch_all(MYSQLI_ASSOC):[];
 

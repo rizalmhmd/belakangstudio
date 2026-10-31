@@ -55,24 +55,38 @@ function validateCart(&$items, $menuStocks) {
   }
 }
 
-// Tambah item baru dari menu.php
+// Tambah item baru dari menu.php (verifikasi harga dari database)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['items']) && !isset($_POST['ajax_update']) && !isset($_POST['clear'])) {
   $menuNotes = $_POST['notes'] ?? [];
+  $priceStmt = $mysqli->prepare("SELECT name, category, price_hot, price_ice FROM menus WHERE id = ?");
 
   foreach ($_POST['items'] as $key => $data) {
     $qty = intval($data['qty'] ?? 0);
-    if ($qty > 0) {
-      $menuId = intval($data['menu_id']);
-      $note = trim($menuNotes[$menuId] ?? '');
-      $_SESSION['cart'][$key] = [
-        'menu_id' => $menuId,
-        'name'    => $data['name'],
-        'variant' => $data['variant'],
-        'price'   => intval($data['price']),
-        'qty'     => $qty,
-        'note'    => $note,
-      ];
+    if ($qty > 0 && preg_match('/^(\d+)_(hot|ice)$/', (string)$key, $match) && $priceStmt) {
+      $menuId = (int)$match[1];
+      $variantKey = $match[2];
+      $priceStmt->bind_param("i", $menuId);
+      if ($priceStmt->execute()) {
+        $menuRow = $priceStmt->get_result()->fetch_assoc();
+        if ($menuRow) {
+          $dbPrice = (int)($variantKey === 'hot' ? $menuRow['price_hot'] : $menuRow['price_ice']);
+          if ($dbPrice > 0) {
+            $note = trim($menuNotes[$menuId] ?? '');
+            $_SESSION['cart'][$key] = [
+              'menu_id' => $menuId,
+              'name'    => $data['name'] ?? $menuRow['name'],
+              'variant' => ucfirst($variantKey),
+              'price'   => $dbPrice,
+              'qty'     => $qty,
+              'note'    => $note,
+            ];
+          }
+        }
+      }
     }
+  }
+  if ($priceStmt) {
+    $priceStmt->close();
   }
 
   if (!empty($_SESSION['cart'])) {
