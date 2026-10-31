@@ -1,11 +1,11 @@
 <?php
 // db.php
-$DB_HOST = getenv('DB_HOST') ?: ($_ENV['DB_HOST'] ?? 'localhost');
-$DB_PORT = (int)(getenv('DB_PORT') ?: ($_ENV['DB_PORT'] ?? 3306));
-$DB_USER = getenv('DB_USER') ?: ($_ENV['DB_USER'] ?? 'root');
-$DB_PASS = getenv('DB_PASS') !== false ? getenv('DB_PASS') : ($_ENV['DB_PASS'] ?? '');
-$DB_NAME = getenv('DB_NAME') ?: ($_ENV['DB_NAME'] ?? 'belakangstudiocaffe');
-$DB_SSL  = getenv('DB_SSL') ?: ($_ENV['DB_SSL'] ?? '');
+$DB_HOST = getenv('DB_HOST') ?: ($_ENV['DB_HOST'] ?? 'gateway01.ap-southeast-1.prod.aws.tidbcloud.com');
+$DB_PORT = (int)(getenv('DB_PORT') ?: ($_ENV['DB_PORT'] ?? 4000));
+$DB_USER = getenv('DB_USER') ?: ($_ENV['DB_USER'] ?? '25zLMrgWPwgqxo2.root');
+$DB_PASS = getenv('DB_PASS') !== false ? getenv('DB_PASS') : ($_ENV['DB_PASS'] ?? 'J6F3LIi0cWqr30c9');
+$DB_NAME = getenv('DB_NAME') ?: ($_ENV['DB_NAME'] ?? 'test');
+$DB_SSL  = getenv('DB_SSL') ?: ($_ENV['DB_SSL'] ?? 'true');
 
 $mysqli = mysqli_init();
 
